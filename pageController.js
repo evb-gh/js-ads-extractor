@@ -1,13 +1,41 @@
 const pageScraper = require('./pageScraper');
+const savedData = require('./data')
+const fs = require('fs');
 
 async function scrapeAll(browserInstance) {
 
 	let browser;
 
 	try {
-
 		browser = await browserInstance;
-		await pageScraper.scraper(browser);
+		let scrapedData = {};
+
+		scrapedData = await pageScraper.scraper(browser);
+		await browser.close();
+
+		const newData = savedData.concat(scrapedData)
+
+		//Object.assign(newData, savedData, scrapedData)
+
+		//console.log('scrapedDate starts here: ↓ \n', scrapedData);
+		//console.log('newData starts here: ↓ \n', newData);
+
+		const uniqueIds = new Set();
+
+		const uniqueData = newData.filter(element => {
+
+			const isDuplicate = uniqueIds.has(element.jobID);
+			uniqueIds.add(element.jobID);
+
+			return !isDuplicate;
+		});
+
+		fs.writeFile("data.json", JSON.stringify(uniqueData), 'utf8', function (err) {
+			if (err) {
+				return console.error(err);
+			}
+			console.log("The data has been scraped and saved successfully! View it at './data.json'");
+		});
 
 	}
 	catch (err) {

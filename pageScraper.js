@@ -1,6 +1,6 @@
 const scraperObject = {
 
-    url: 'https://www.indeed.com/jobs?q=Driver&l=Texas',
+    url: 'https://www.indeed.com/jobs?q=(qa or qa engineer or sdet)&l=Texas',
     page: 0,
 
     async scraper(browser) {
@@ -18,33 +18,32 @@ const scraperObject = {
             let urls = await page.evaluate(() => {
 
                 try {
-                    return [...document.querySelectorAll('h2 > a')].map(elem => elem.href)
+                    return [...document.querySelectorAll('h2 > a')].map(elem => elem.href);
                 } catch (e) {
                     console.error(e);
                 }
             });
 
             let pagePromise = (link) => new Promise(async (resolve, reject) => {
-
-                let dataObj = {};
                 let newPage = await browser.newPage();
-
-                const jobTitleSelector = 'h1.jobsearch-JobInfoHeader-title'
-                const jobLocationSelector = 'div.jobsearch-CompanyInfoContainer > div > div > div > div:nth-child(2)'
-                // const companyNameSelector = 'div.jobsearch-CompanyInfoContainer a'
-                const companyNameSelector = 'div.jobsearch-CompanyInfoContainer > div > div > div > div.jobsearch-InlineCompanyRating > div:nth-child(2) > div'
-
                 await newPage.goto(link);
 
+                const jobTitleSelector = 'h1.jobsearch-JobInfoHeader-title';
+                const jobLocationSelector = 'div.jobsearch-CompanyInfoContainer > div > div > div > div:nth-child(2)';
+                const companyNameSelector = 'div.jobsearch-CompanyInfoContainer > div > div > div > div.jobsearch-InlineCompanyRating > div:nth-child(2) > div';
+
+                let dataObj = {};
                 dataObj['jobTitle'] = await newPage.$eval(jobTitleSelector, text => text.textContent);
                 dataObj['jobLocation'] = await newPage.$eval(jobLocationSelector, text => text.innerText);
                 dataObj['companyName'] = await newPage.$eval(companyNameSelector, text => text.innerText);
 
                 let jobKey = await newPage.$eval('script#mosaic-data', text => text.textContent.match(/(?<="jobKey":")[\w\d]*/)[0]);
-                dataObj['jobUrl'] = `https://www.indeed.com/viewjob?jk=${jobKey}`
-                dataObj['jobID'] = jobKey
+                dataObj['jobUrl'] = `https://www.indeed.com/viewjob?jk=${jobKey}`;
+                dataObj['jobID'] = jobKey;
 
                 resolve(dataObj);
+
+                console.log(dataObj);
 
                 await newPage.close();
             });
@@ -74,17 +73,21 @@ const scraperObject = {
 
             console.log(nextPageExists)
 
-            if (nextPageExists) {
-                scraperObject.page += 10
-                console.log(scraperObject.page)
-                console.log(`${scraperObject.url}&start=${scraperObject.page}`)
-                let pageUrl = `${scraperObject.url}&start=${scraperObject.page}`;
-                await page.goto(pageUrl);
+            let scanNumber = 3;
 
-                return scrapeCurrentPage(); // Call this function recursively
-            }
+            //  if (nextPageExists && scanNumber != 0) {
+            //      scraperObject.page += 10
+            //      console.log(scraperObject.page)
+            //      console.log(`${scraperObject.url}&start=${scraperObject.page}`)
+            //      let pageUrl = `${scraperObject.url}&start=${scraperObject.page}`;
+            //      await page.goto(pageUrl);
 
-            // await page.close();
+            //      scanNumber -= 1;
+            //      return scrapeCurrentPage(); // Call this function recursively
+
+            //  }
+
+            await page.close();
 
             return scrapedData;
         }
