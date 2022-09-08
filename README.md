@@ -2,7 +2,7 @@
 
 This project uses [Puppeteer API](https://pptr.dev/) to extract info from a job site.
 
-# Installation
+## Installation
 
 ```bash
 git clone https://github.com/evb-gh/js-ads-extractor.git
