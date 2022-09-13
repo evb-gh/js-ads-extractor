@@ -16,3 +16,8 @@ npm install
 # after setting the desired query in pageScraper.js run
 npm run start
 ```
+
+## TODO
+
+- [ ] load saved data at start
+- [ ] update and save data to file at finish

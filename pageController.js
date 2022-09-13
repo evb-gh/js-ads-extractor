@@ -15,16 +15,12 @@ async function scrapeAll(browserInstance) {
 
 		const newData = savedData.concat(scrapedData)
 
-		//Object.assign(newData, savedData, scrapedData)
-
-		//console.log('scrapedDate starts here: ↓ \n', scrapedData);
-		//console.log('newData starts here: ↓ \n', newData);
-
-		const uniqueIds = new Set();
+		const uniqueIds = new Set(); // lets you store unique values of any type
 
 		const uniqueData = newData.filter(element => {
 
 			const isDuplicate = uniqueIds.has(element.jobID);
+
 			uniqueIds.add(element.jobID);
 
 			return !isDuplicate;

@@ -18,7 +18,7 @@ const scraperObject = {
             let urls = await page.evaluate(() => {
 
                 try {
-                    return [...document.querySelectorAll('h2 > a')].map(elem => elem.href);
+                    return [...document.querySelectorAll('.jcs-JobTitle')].map(elem => elem.href);
                 } catch (e) {
                     console.error(e);
                 }
@@ -28,7 +28,7 @@ const scraperObject = {
                 let newPage = await browser.newPage();
                 await newPage.goto(link);
 
-                const jobTitleSelector = 'h1.jobsearch-JobInfoHeader-title';
+                const jobTitleSelector = '.jcs-JobTitle';
                 const jobLocationSelector = 'div.jobsearch-CompanyInfoContainer > div > div > div > div:nth-child(2)';
                 const companyNameSelector = 'div.jobsearch-CompanyInfoContainer > div > div > div > div.jobsearch-InlineCompanyRating > div:nth-child(2) > div';
 
