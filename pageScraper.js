@@ -8,21 +8,92 @@ const scraperObject = {
         let page = await browser.newPage();
         console.log(`Navigating to ${this.url}...`);
         await page.goto(this.url);
-        let scrapedData = [];
+
+        await page.waitForSelector('.jobsearch-ResultsList', { state: 'attached' })
+        const scrapedData = [];
+
+        const test = await page.evaluate(() => {
+
+            const jobTable = document.querySelector('.jobsearch-ResultsList');
+            const bla = jobTable.querySelectorAll('.result')
+            const results = [...bla];
+
+            return results
+                .map((job) => {
+                    const jobtitle = job
+                        .querySelector('h2')
+                        .textContent
+                        .trim();
+
+                    const summary = job
+                        .querySelector('.job-snippet')
+                        .textContent
+                        .trim();
+
+                    const url = job
+                        .querySelector('h2 > a')
+                        .href;
+
+                    const company = job
+                        .querySelector('.companyName')
+                        .textContent
+                        .trim();
+
+                    const location = job
+                        .querySelector('.companyLocation')
+                        .textContent
+                        .trim();
+
+                    const postDate = job
+                        .querySelector('.date')
+                        .textContent
+                        .trim();
+
+                    const salary = job
+                        .querySelector('.date')
+                        .textContent
+                        .trim();
+
+                    const isEasyApply = job
+                        .querySelector('.ialbl')
+                        .textContent
+                        .trim() === "Easily apply";
+
+                    return {
+                        title: jobtitle,
+                        summary: summary,
+                        url: url,
+                        company: company,
+                        location: location,
+                        postDate: postDate,
+                        salary: salary,
+                        isEasyApply: isEasyApply
+                    };
+                })
+
+        })
+
+        console.log(test[0].title);
 
         async function scrapeCurrentPage() {
 
-            await page.waitForSelector('.mosaic-zone');
+            await page.waitForSelector('.jcs-JobTitle');
 
-            // Get the link to all the required books
+            // Get the link to all job posts
             let urls = await page.evaluate(() => {
 
-                try {
-                    return [...document.querySelectorAll('.jcs-JobTitle')].map(elem => elem.href);
-                } catch (e) {
-                    console.error(e);
-                }
+                const jobs = document.querySelectorAll('.jcs-JobTitle');
+
+                return [...jobs].map(elem => elem.href);
             });
+
+            for (link in urls) {
+
+                let currentPageData = await pagePromise(urls[link]);
+
+                scrapedData.push(currentPageData);
+                // console.log(currentPageData);
+            }
 
             let pagePromise = (link) => new Promise(async (resolve, reject) => {
                 let newPage = await browser.newPage();
@@ -47,14 +118,6 @@ const scraperObject = {
 
                 await newPage.close();
             });
-
-            for (link in urls) {
-
-                let currentPageData = await pagePromise(urls[link]);
-
-                scrapedData.push(currentPageData);
-                // console.log(currentPageData);
-            }
 
             // const paginationSelector = 'ul.pagination-list > li'
             await page.waitForSelector('nav[aria-label="pagination"]');
@@ -91,6 +154,7 @@ const scraperObject = {
 
             return scrapedData;
         }
+
         let data = await scrapeCurrentPage();
         console.log(data);
         return data;
