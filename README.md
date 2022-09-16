@@ -19,5 +19,6 @@ npm run start
 
 ## TODO
 
+- [ ] handle errors if elements not present
 - [ ] load saved data at start
 - [ ] update and save data to file at finish
