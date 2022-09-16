@@ -5,75 +5,96 @@ const scraperObject = {
 
     async scraper(browser) {
 
-        let page = await browser.newPage();
-        console.log(`Navigating to ${this.url}...`);
-        await page.goto(this.url);
+        try {
 
-        await page.waitForSelector('.jobsearch-ResultsList', { state: 'attached' })
-        const scrapedData = [];
+            let page = await browser.newPage();
+            console.log(`Navigating to ${this.url}...`);
+            await page.goto(this.url);
 
-        const test = await page.evaluate(() => {
+            await page.waitForSelector('.jobsearch-ResultsList', { state: 'attached' })
+            // const scrapedData = [];
 
-            const jobTable = document.querySelector('.jobsearch-ResultsList');
-            const bla = jobTable.querySelectorAll('.result')
-            const results = [...bla];
+            const results = await page.evaluate(() => {
 
-            return results
-                .map((job) => {
-                    const jobtitle = job
-                        .querySelector('h2')
-                        .textContent
-                        .trim();
+                const jobTable = document.querySelector('.jobsearch-ResultsList');
+                const jobs = jobTable.querySelectorAll('.result') === 0 ? 'no elements found' :
+                    jobTable.querySelectorAll('.result');
 
-                    const summary = job
-                        .querySelector('.job-snippet')
-                        .textContent
-                        .trim();
+                return [...jobs]
+                    .map((job) => {
+                        const jobTitle = !job.querySelector('h2') ? 'no jobTitle' :
+                            job.querySelector('h2')
+                                .textContent
+                                .trim()
 
-                    const url = job
-                        .querySelector('h2 > a')
-                        .href;
+                        console.log('jobTitle: ', jobTitle);
 
-                    const company = job
-                        .querySelector('.companyName')
-                        .textContent
-                        .trim();
+                        const summary = !job.querySelector('.job-snippet') ? 'no summary' :
+                            job.querySelector('.job-snippet')
+                                .textContent
+                                .trim();
 
-                    const location = job
-                        .querySelector('.companyLocation')
-                        .textContent
-                        .trim();
+                        console.log('summary: ', summary);
 
-                    const postDate = job
-                        .querySelector('.date')
-                        .textContent
-                        .trim();
+                        const url = !job.querySelector('h2 > a') ? 'no url' :
+                            job.querySelector('h2 > a').href;
 
-                    const salary = job
-                        .querySelector('.date')
-                        .textContent
-                        .trim();
+                        console.log('url: ', url);
 
-                    const isEasyApply = job
-                        .querySelector('.ialbl')
-                        .textContent
-                        .trim() === "Easily apply";
+                        const company = !job.querySelector('.companyName') ? 'no companyName' :
+                            job.querySelector('.companyName')
+                                .textContent
+                                .trim();
 
-                    return {
-                        title: jobtitle,
-                        summary: summary,
-                        url: url,
-                        company: company,
-                        location: location,
-                        postDate: postDate,
-                        salary: salary,
-                        isEasyApply: isEasyApply
-                    };
-                })
+                        console.log('company: ', company);
 
-        })
+                        const location = !job.querySelector('.companyLocation') ? 'no location' :
+                            job.querySelector('.companyLocation')
+                                .textContent
+                                .trim();
 
-        console.log(test[0].title);
+                        console.log('location: ', location);
+
+                        const postDate = !job.querySelector('.date') ? 'no postDate' :
+                            job.querySelector('.date')
+                                .textContent
+                                .trim();
+
+                        console.log('postDate: ', postDate);
+
+                        const salary = !job.querySelector('.salary-snippet-container') ? 'no salary' :
+                            job.querySelector('.salary-snippet-container')
+                                .textContent
+                                .trim();
+
+                        console.log('salary: ', salary);
+
+                        const isEasyApply = !job.querySelector('.ialbl') ? 'no easyApply' :
+                            job.querySelector('.ialbl')
+                                .textContent
+                                .trim() === "Easily apply";
+
+                        console.log('isEasyApply: ', isEasyApply);
+
+                        return {
+                            title: jobTitle,
+                            summary: summary,
+                            url: url,
+                            company: company,
+                            location: location,
+                            postDate: postDate,
+                            salary: salary,
+                            isEasyApply: isEasyApply
+                        };
+                    })
+            })
+
+        } catch (err) {
+
+            console.error(err)
+        }
+
+        console.log(results[0].title);
 
         async function scrapeCurrentPage() {
 
@@ -122,16 +143,19 @@ const scraperObject = {
             // const paginationSelector = 'ul.pagination-list > li'
             await page.waitForSelector('nav[aria-label="pagination"]');
 
+            // indeed returns two type of pagination html
+            // in one the links are nested inside of a ul, on the other they are just
+            // a list, not nested in anything
             const exists = await page.$eval('ul.pagination-list', () => true).catch(() => false)
-
-            console.log(exists);
 
             let nextPageExists;
 
             if (exists) {
-                nextPageExists = (await page.$$eval('ul.pagination-list > li', list => list[list.length - 1].textContent)) == '';
+                const selector = 'ul.pagination-list > li'
+                nextPageExists = (await page.$$eval(selector, list => list[list.length - 1].textContent)) == '';
             } else {
-                nextPageExists = (await page.$$eval('nav[aria-label="pagination"] > div', list => list[list.length - 1].textContent)) == '';
+                const selector = 'nav[aria-label="pagination"] > div'
+                nextPageExists = (await page.$$eval(selector, list => list[list.length - 1].textContent)) == '';
             }
 
             console.log(nextPageExists)
