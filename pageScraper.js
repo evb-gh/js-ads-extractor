@@ -7,7 +7,7 @@ const scraperObject = {
 
         try {
 
-            let page = await browser.newPage();
+            const page = await browser.newPage();
             console.log(`Navigating to ${this.url}...`);
             await page.goto(this.url);
 
@@ -89,101 +89,130 @@ const scraperObject = {
                     })
             })
 
+            const continium = await page.evaluate(() => {
+                const list = document.querySelector('nav[aria-label="pagination"]');
+
+                if (!list.childNodes.length) {
+                    // No paging of results
+                    return false;
+                } else {
+                    // Indeed returns two different types of html
+                    // In one the links are nested inside of a ul, on the other they are just
+                    // a list, not nested in anything
+                    // I believe the nested one is SSRed, and the other one is hydrated?  Aria stuff
+                    // is not set for flat, and it doesn't use semantic tags.
+                    const type = list.childElementCount > 1 ? "flat" : "nested";
+                    const buttons =
+                        type === "flat"
+                            ? list.childNodes
+                            : list
+                                .firstChild // returns the node's first child
+                                .childNodes
+
+                    // We determine if this is the last page by checking if the last button is a number
+                    const isLastPage = buttons[buttons.length - 1].textContent * 1 != 0;
+                    if (isLastPage) {
+                        // We have seen all the results
+                        return false;
+                    }
+                }
+            })
+
+            console.log(results);
+            return results;
+
         } catch (err) {
 
             console.error(err)
         }
 
-        console.log(results[0].title);
+        // async function scrapeCurrentPage() {
 
-        async function scrapeCurrentPage() {
+        //     await page.waitForSelector('.jcs-JobTitle');
 
-            await page.waitForSelector('.jcs-JobTitle');
+        //     // Get the link to all job posts
+        //     let urls = await page.evaluate(() => {
 
-            // Get the link to all job posts
-            let urls = await page.evaluate(() => {
+        //         const jobs = document.querySelectorAll('.jcs-JobTitle');
 
-                const jobs = document.querySelectorAll('.jcs-JobTitle');
+        //         return [...jobs].map(elem => elem.href);
+        //     });
 
-                return [...jobs].map(elem => elem.href);
-            });
+        //     for (link in urls) {
 
-            for (link in urls) {
+        //         let currentPageData = await pagePromise(urls[link]);
 
-                let currentPageData = await pagePromise(urls[link]);
+        //         scrapedData.push(currentPageData);
+        //         // console.log(currentPageData);
+        //     }
 
-                scrapedData.push(currentPageData);
-                // console.log(currentPageData);
-            }
+        //     let pagePromise = (link) => new Promise(async (resolve, reject) => {
+        //         let newPage = await browser.newPage();
+        //         await newPage.goto(link);
 
-            let pagePromise = (link) => new Promise(async (resolve, reject) => {
-                let newPage = await browser.newPage();
-                await newPage.goto(link);
+        //         const jobTitleSelector = '.jcs-JobTitle';
+        //         const jobLocationSelector = 'div.jobsearch-CompanyInfoContainer > div > div > div > div:nth-child(2)';
+        //         const companyNameSelector = 'div.jobsearch-CompanyInfoContainer > div > div > div > div.jobsearch-InlineCompanyRating > div:nth-child(2) > div';
 
-                const jobTitleSelector = '.jcs-JobTitle';
-                const jobLocationSelector = 'div.jobsearch-CompanyInfoContainer > div > div > div > div:nth-child(2)';
-                const companyNameSelector = 'div.jobsearch-CompanyInfoContainer > div > div > div > div.jobsearch-InlineCompanyRating > div:nth-child(2) > div';
+        //         let dataObj = {};
+        //         dataObj['jobTitle'] = await newPage.$eval(jobTitleSelector, text => text.textContent);
+        //         dataObj['jobLocation'] = await newPage.$eval(jobLocationSelector, text => text.innerText);
+        //         dataObj['companyName'] = await newPage.$eval(companyNameSelector, text => text.innerText);
 
-                let dataObj = {};
-                dataObj['jobTitle'] = await newPage.$eval(jobTitleSelector, text => text.textContent);
-                dataObj['jobLocation'] = await newPage.$eval(jobLocationSelector, text => text.innerText);
-                dataObj['companyName'] = await newPage.$eval(companyNameSelector, text => text.innerText);
+        //         let jobKey = await newPage.$eval('script#mosaic-data', text => text.textContent.match(/(?<="jobKey":")[\w\d]*/)[0]);
+        //         dataObj['jobUrl'] = `https://www.indeed.com/viewjob?jk=${jobKey}`;
+        //         dataObj['jobID'] = jobKey;
 
-                let jobKey = await newPage.$eval('script#mosaic-data', text => text.textContent.match(/(?<="jobKey":")[\w\d]*/)[0]);
-                dataObj['jobUrl'] = `https://www.indeed.com/viewjob?jk=${jobKey}`;
-                dataObj['jobID'] = jobKey;
+        //         resolve(dataObj);
 
-                resolve(dataObj);
+        //         console.log(dataObj);
 
-                console.log(dataObj);
+        //         await newPage.close();
+        //     });
 
-                await newPage.close();
-            });
+        //     // const paginationSelector = 'ul.pagination-list > li'
+        //     await page.waitForSelector('nav[aria-label="pagination"]');
 
-            // const paginationSelector = 'ul.pagination-list > li'
-            await page.waitForSelector('nav[aria-label="pagination"]');
+        //     // indeed returns two type of pagination html
+        //     // in one the links are nested inside of a ul, on the other they are just
+        //     // a list, not nested in anything
+        //     const exists = await page.$eval('ul.pagination-list', () => true).catch(() => false)
 
-            // indeed returns two type of pagination html
-            // in one the links are nested inside of a ul, on the other they are just
-            // a list, not nested in anything
-            const exists = await page.$eval('ul.pagination-list', () => true).catch(() => false)
+        //     let nextPageExists;
 
-            let nextPageExists;
+        //     if (exists) {
+        //         const selector = 'ul.pagination-list > li'
+        //         nextPageExists = (await page.$$eval(selector, list => list[list.length - 1].textContent)) == '';
+        //     } else {
+        //         const selector = 'nav[aria-label="pagination"] > div'
+        //         nextPageExists = (await page.$$eval(selector, list => list[list.length - 1].textContent)) == '';
+        //     }
 
-            if (exists) {
-                const selector = 'ul.pagination-list > li'
-                nextPageExists = (await page.$$eval(selector, list => list[list.length - 1].textContent)) == '';
-            } else {
-                const selector = 'nav[aria-label="pagination"] > div'
-                nextPageExists = (await page.$$eval(selector, list => list[list.length - 1].textContent)) == '';
-            }
+        //     console.log(nextPageExists)
 
-            console.log(nextPageExists)
+        //     let scanNumber = 3;
 
-            let scanNumber = 3;
+        //     //  if (nextPageExists && scanNumber != 0) {
+        //     //      scraperObject.page += 10
+        //     //      console.log(scraperObject.page)
+        //     //      console.log(`${scraperObject.url}&start=${scraperObject.page}`)
+        //     //      let pageUrl = `${scraperObject.url}&start=${scraperObject.page}`;
+        //     //      await page.goto(pageUrl);
 
-            //  if (nextPageExists && scanNumber != 0) {
-            //      scraperObject.page += 10
-            //      console.log(scraperObject.page)
-            //      console.log(`${scraperObject.url}&start=${scraperObject.page}`)
-            //      let pageUrl = `${scraperObject.url}&start=${scraperObject.page}`;
-            //      await page.goto(pageUrl);
+        //     //      scanNumber -= 1;
+        //     //      return scrapeCurrentPage(); // Call this function recursively
 
-            //      scanNumber -= 1;
-            //      return scrapeCurrentPage(); // Call this function recursively
+        //     //  }
 
-            //  }
+        //     await page.close();
 
-            await page.close();
+        //     return scrapedData;
+        // }
 
-            return scrapedData;
-        }
-
-        let data = await scrapeCurrentPage();
-        console.log(data);
-        return data;
+        // const data = await scrapeCurrentPage();
+        //`` console.log(results);
+        //`` return results;
     }
-    // console.log(urls, typeof (urls));
 }
 
 module.exports = scraperObject;
