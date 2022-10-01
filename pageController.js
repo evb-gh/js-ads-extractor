@@ -15,7 +15,7 @@ async function scrapeAll(browserInstance) {
 
 		const newData = savedData.concat(scrapedData)
 
-		const uniqueIds = new Set(); // lets you store unique values of any type
+		const uniqueIds = new Set(); // stores unique values of any type
 
 		const uniqueData = newData.filter(element => {
 
