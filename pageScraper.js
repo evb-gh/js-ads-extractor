@@ -118,100 +118,12 @@ const scraperObject = {
                 }
             })
 
-            console.log(results);
             return results;
 
         } catch (err) {
 
             console.error(err)
         }
-
-        // async function scrapeCurrentPage() {
-
-        //     await page.waitForSelector('.jcs-JobTitle');
-
-        //     // Get the link to all job posts
-        //     let urls = await page.evaluate(() => {
-
-        //         const jobs = document.querySelectorAll('.jcs-JobTitle');
-
-        //         return [...jobs].map(elem => elem.href);
-        //     });
-
-        //     for (link in urls) {
-
-        //         let currentPageData = await pagePromise(urls[link]);
-
-        //         scrapedData.push(currentPageData);
-        //         // console.log(currentPageData);
-        //     }
-
-        //     let pagePromise = (link) => new Promise(async (resolve, reject) => {
-        //         let newPage = await browser.newPage();
-        //         await newPage.goto(link);
-
-        //         const jobTitleSelector = '.jcs-JobTitle';
-        //         const jobLocationSelector = 'div.jobsearch-CompanyInfoContainer > div > div > div > div:nth-child(2)';
-        //         const companyNameSelector = 'div.jobsearch-CompanyInfoContainer > div > div > div > div.jobsearch-InlineCompanyRating > div:nth-child(2) > div';
-
-        //         let dataObj = {};
-        //         dataObj['jobTitle'] = await newPage.$eval(jobTitleSelector, text => text.textContent);
-        //         dataObj['jobLocation'] = await newPage.$eval(jobLocationSelector, text => text.innerText);
-        //         dataObj['companyName'] = await newPage.$eval(companyNameSelector, text => text.innerText);
-
-        //         let jobKey = await newPage.$eval('script#mosaic-data', text => text.textContent.match(/(?<="jobKey":")[\w\d]*/)[0]);
-        //         dataObj['jobUrl'] = `https://www.indeed.com/viewjob?jk=${jobKey}`;
-        //         dataObj['jobID'] = jobKey;
-
-        //         resolve(dataObj);
-
-        //         console.log(dataObj);
-
-        //         await newPage.close();
-        //     });
-
-        //     // const paginationSelector = 'ul.pagination-list > li'
-        //     await page.waitForSelector('nav[aria-label="pagination"]');
-
-        //     // indeed returns two type of pagination html
-        //     // in one the links are nested inside of a ul, on the other they are just
-        //     // a list, not nested in anything
-        //     const exists = await page.$eval('ul.pagination-list', () => true).catch(() => false)
-
-        //     let nextPageExists;
-
-        //     if (exists) {
-        //         const selector = 'ul.pagination-list > li'
-        //         nextPageExists = (await page.$$eval(selector, list => list[list.length - 1].textContent)) == '';
-        //     } else {
-        //         const selector = 'nav[aria-label="pagination"] > div'
-        //         nextPageExists = (await page.$$eval(selector, list => list[list.length - 1].textContent)) == '';
-        //     }
-
-        //     console.log(nextPageExists)
-
-        //     let scanNumber = 3;
-
-        //     //  if (nextPageExists && scanNumber != 0) {
-        //     //      scraperObject.page += 10
-        //     //      console.log(scraperObject.page)
-        //     //      console.log(`${scraperObject.url}&start=${scraperObject.page}`)
-        //     //      let pageUrl = `${scraperObject.url}&start=${scraperObject.page}`;
-        //     //      await page.goto(pageUrl);
-
-        //     //      scanNumber -= 1;
-        //     //      return scrapeCurrentPage(); // Call this function recursively
-
-        //     //  }
-
-        //     await page.close();
-
-        //     return scrapedData;
-        // }
-
-        // const data = await scrapeCurrentPage();
-        //`` console.log(results);
-        //`` return results;
     }
 }
 
