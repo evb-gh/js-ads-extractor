@@ -1,16 +1,27 @@
-const pageScraper = require('./pageScraper');
+// const pageScraper = require('./pageScraper');
+const pageScraper = require('./scraper');
 const savedData = require('./data')
 const fs = require('fs');
 
+const queryOptions = {
+	host: 'www.indeed.com',
+	query: 'Software',
+	city: 'Seattle, WA',
+	radius: '25',
+	level: 'entry_level',
+	jobType: 'fulltime',
+	maxAge: '7',
+	sort: 'date',
+	limit: 100
+};
+
 async function scrapeAll(browserInstance) {
 
-	let browser;
-
 	try {
-		browser = await browserInstance;
-		let scrapedData = {};
+		const browser = await browserInstance;
 
-		scrapedData = await pageScraper.scraper(browser);
+		const scrapedData = await pageScraper.query(queryOptions, browser);
+
 		await browser.close();
 
 		const newData = savedData.concat(scrapedData)
@@ -26,11 +37,11 @@ async function scrapeAll(browserInstance) {
 			return !isDuplicate;
 		});
 
-		fs.writeFile("data.json", JSON.stringify(uniqueData), 'utf8', function (err) {
+		fs.writeFile('data.json', JSON.stringify(uniqueData), 'utf8', function (err) {
 			if (err) {
 				return console.error(err);
 			}
-			console.log("The data has been scraped and saved successfully! View it at './data.json'");
+			console.log('\nThe data has been scraped and saved successfully! View it at "./data.json"');
 		});
 
 	}
